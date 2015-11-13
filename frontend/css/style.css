@@ -1,0 +1,21 @@
+.container-fluid {
+	margin: 40px;
+}
+#gb-body div {
+	margin: 20px;
+}
+#gb-body {
+	background-color: #DCDDDE;
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	border-radius: 20px;
+	-webkit-box-shadow: 4px 4px 10px 0px rgba(0,0,0,0.68);
+-moz-box-shadow: 4px 4px 10px 0px rgba(0,0,0,0.68);
+box-shadow: 4px 4px 10px 0px rgba(0,0,0,0.68);
+}
+#gb-screen {
+	background-color: #858585;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}

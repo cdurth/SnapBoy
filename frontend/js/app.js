@@ -1,56 +1,120 @@
-var gbWidth, gbHeight;
-var aspectRatio = {
-    width: 4,
-    height: 3
-}
+var picFlag = false;
 
-$(window).load(function () {
-    setBody();
-    setScreen();
-    setupCam();
+$(function () {
+
+    $("#snap").click(function () {
+        console.log('snap');
+    });
+
+    $("#send").click(function () {
+        console.log('send');
+    });
+
 });
 
-// $(function () {
-    
-// });
+// Put event listeners into place
+window.addEventListener("DOMContentLoaded", function () {
+	// Grab elements, create settings, etc.
+	var canvas = document.getElementById("imgCanvas"),
+		context = canvas.getContext("2d"),
+		video = document.getElementById("videoElement"),
+		videoObj = { "video": true },
+		errBack = function (error) {
+			console.log("Video capture error: ", error.code);
+		};
+	//video.style.width = $('#gb-screen').width();
+	//video.style.height = $('#gb-screen').height();
+	// Put video listeners into place
+	if (navigator.getUserMedia) { // Standard
+		navigator.getUserMedia(videoObj, function (stream) {
+			video.src = stream;
+			video.play();
+		}, errBack);
+	} else if (navigator.webkitGetUserMedia) { // WebKit-prefixed
+		navigator.webkitGetUserMedia(videoObj, function (stream) {
+			video.src = window.webkitURL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	else if (navigator.mozGetUserMedia) { // Firefox-prefixed
+		navigator.mozGetUserMedia(videoObj, function (stream) {
+			video.src = window.URL.createObjectURL(stream);
+			video.play();
+		}, errBack);
+	}
+	
+	// Trigger photo take
+document.getElementById("snap").addEventListener("click", function() {
+	picFlag = true;
+	document.getElementById("videoElement").style.display = "none";
+	context.drawImage(video, 0, 0, 160, 120);
+});
 
-var setBody = function () {
-    var gbBody = $('#gb-body');
-    gbWidth = gbBody.width();
-    gbHeight = $(window).height() - (gbWidth / 1.66);
-    gbBody.css('width', gbWidth);
-    gbBody.css('height', gbHeight);
+	// Trigger send
+document.getElementById("send").addEventListener("click", function() {
+	if(picFlag){
+		var img = convertCanvasToImage(canvas);
+		// myPost("http://localhost:3000/api/app", {uri:img}, function(res){
+		// 	alert('SUCCESS! Picture is being processed and sent to print queue');
+		// 	window.location.reload(true);
+		// });
+		
+		$.post( "http://localhost:3000/api/app", {uri:img}, function( data ) {
+		  	alert('SUCCESS! Picture is being processed and sent to print queue');
+			window.location.reload(true);
+		});
+		
+		// var xhttp = new XMLHttpRequest();
+	    // xhttp.open("GET", "http://localhost:3000/api/app", false);
+		// xhttp.send(img);
+		
+	} else {
+		alert('Please take a picture first!');
+	}
+});
+
+
+	// Trigger reset
+document.getElementById("reset").addEventListener("click", function() {
+	window.location.reload(true);
+});
+}, false);
+
+// Converts canvas to an image
+function convertCanvasToImage(canvas) {
+    var image = new Image();
+    image.src = canvas.toDataURL("image/png");
+    return image.src;
 }
 
-var setScreen = function () {
-    var gbScreen = $('#gb-screen');
-    var gbScreenWidth = gbWidth - (40);
-    var gbScreenHeight = aspectHeight(gbScreenWidth);
-    
-    gbScreen.css('width', gbScreenWidth);
-    gbScreen.css('height', gbScreenHeight);
+function getXmlDoc() {
+  var xmlDoc;
+
+  if (window.XMLHttpRequest) {
+    // code for IE7+, Firefox, Chrome, Opera, Safari
+    xmlDoc = new XMLHttpRequest();
+  }
+  else {
+    // code for IE6, IE5
+    xmlDoc = new ActiveXObject("Microsoft.XMLHTTP");
+  }
+
+  return xmlDoc;
 }
 
-var setupCam = function () {
-    var video = $('#videoElement');
-    video.css('width', $('#gb-screen').width());
-    video.css('height', $('#gb-screen').height());
+function myPost(url, data, callback) {
+  var xmlDoc = getXmlDoc();
 
-    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+  xmlDoc.open('POST', url, true);
+  xmlDoc.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
-    if (navigator.getUserMedia) {
-        navigator.getUserMedia({ video: true }, handleVideo, videoError);
+  xmlDoc.onreadystatechange = function() {
+	  console.log(xmlDoc.readyState,xmlDoc.satus,xmlDoc.responseText);
+    if (xmlDoc.readyState === 4 && xmlDoc.status === 200) {
+		console.log('after')
+      callback(xmlDoc);
     }
+  }
 
-    function handleVideo(stream) {
-        video.attr('src',window.URL.createObjectURL(stream));
-    }
-
-    function videoError(e) {
-        // do something
-    }
-}
-
-var aspectHeight = function(width){
-    return width / (aspectRatio.width/aspectRatio.height);
+  xmlDoc.send(data);
 }

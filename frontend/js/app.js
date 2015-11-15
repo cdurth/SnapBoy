@@ -64,10 +64,6 @@ document.getElementById("send").addEventListener("click", function() {
 			window.location.reload(true);
 		});
 		
-		// var xhttp = new XMLHttpRequest();
-	    // xhttp.open("GET", "http://localhost:3000/api/app", false);
-		// xhttp.send(img);
-		
 	} else {
 		alert('Please take a picture first!');
 	}

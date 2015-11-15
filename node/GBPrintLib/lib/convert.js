@@ -31,16 +31,17 @@ module.exports = function (config, callback) {
    * Default configuration.
    */
   var defaults = {
-    output: 'image',
-    outputDir: './output',
+    input: './GBPrintLib/output/images/'+ config.id +'.png',
+    output: config.id,
+    outputDir: '../output/output',
     outputExt: 'txt',
     minify: false,
     pngFilter: -1,
     bwThreshold: 1.7,
     batchWidth: 5,
     batchHeight: 8,
-    preview: false,
-    previewDir: './preview',
+    preview: true,
+    previewDir: './GBPrintLib/output/preview',
     previewExt: 'png',
     skipBinary: true
   };
@@ -65,7 +66,7 @@ module.exports = function (config, callback) {
    */
   var argv = {
     config: argVal('-c') || argVal('-conf') || argVal('-config') || config,
-    input: argVal('-file') || argVal('-f') || argVal('-i') || argVal('-input') || argVal(2),
+    input: argVal('-file') || argVal('-f') || argVal('-i') || argVal('-input') || argVal(2) || defaults.input,
     output: argVal('-o') || argVal('-output') || defaults.output,
     outputDir: argVal('-odir') || defaults.outputDir,
     outputExt: argVal('-oext') || defaults.outputExt,
@@ -183,6 +184,7 @@ module.exports = function (config, callback) {
    * @param {Function}      then   callback
    */
   function applyConfig(config, then) {
+    console.log(config);
     if (typeof then !== 'function') {
       then = function () { };
     }
@@ -384,7 +386,7 @@ module.exports = function (config, callback) {
           //console.log("modified average", average2);
         }
         if (x % 40 == 0) {
-          console.log(pixel, pixel2);
+          //console.log(pixel, pixel2);
         }
 
 
@@ -462,11 +464,11 @@ module.exports = function (config, callback) {
         outputStr += row;
       }
 
-      fs.writeFile("./output/dat/output.dat", outputStr, function (err) {
+      fs.writeFile("./GBPrintLib/output/dat/"+ config.id +".dat", outputStr, function (err) {
         if (err) {
           return console.log(err);
         }
-        datToHex("./output/dat/output.dat");
+        datToHex("./GBPrintLib/output/dat/"+ config.id +".dat", config);
         console.log("The file was saved!");
       });
     }

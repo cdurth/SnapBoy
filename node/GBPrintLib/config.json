@@ -1,11 +1,11 @@
-{
-  "input": "./output/images/image2.png",
-  "output": "image",
-  "outputDir": "./output/output",
-  "skipBinary": false,
+// {
+//   "input": "./output/images/image2.png",
+//   "output": "image",
+//   "outputDir": "./output/output",
+//   "skipBinary": false,
 
-  "minify": false,
+//   "minify": false,
 
-  "preview": true,
-  "previewDir": "./output/preview"
-}
+//   "preview": true,
+//   "previewDir": "./output/preview"
+// }

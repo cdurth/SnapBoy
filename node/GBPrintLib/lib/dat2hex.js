@@ -9,7 +9,7 @@
 var fs = require('fs');
 var readFile = require('./readFile');
 
-function datToHex(file) {
+function datToHex(file, configObj) {
   //open the file
   var fh = readFile.fopen(file, "r")
   if (fh === false) {
@@ -83,7 +83,7 @@ function datToHex(file) {
     count++;
   }
   outputStr += "\r\n};\r\n";
-  fs.writeFile("./output/hex/image.txt", outputStr, function (err) {
+  fs.writeFile("./GBPrintLib/output/hex/"+ configObj.id +".txt", outputStr, function (err) {
     if (err) {
       return console.log(err);
     }

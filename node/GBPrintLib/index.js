@@ -5,4 +5,6 @@
  // node index.js -c config.json
 var convert = require('./lib/convert.js');
 
-convert();
+exports.process = function(config){
+	convert(config);
+};

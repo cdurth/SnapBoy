@@ -31,12 +31,12 @@ function datToHex(file) {
 			
     // loop through whole line
     for (var i = 0; i < line.length; i++) {
-      if (line[i] != "\n") {
+      if (line[i] !== "\n") {
         var nr = intval(line[i]);
 
-        if (nr == 1) low = low + 1;
-        if (nr == 2) high = high + 1;
-        if (nr == 3) {
+        if (nr === 1) low = low + 1;
+        if (nr === 2) high = high + 1;
+        if (nr === 3) {
           low = low + 1;
           high = high + 1;
         }
@@ -66,15 +66,24 @@ function datToHex(file) {
   }
   var outputArrSorted = ksort(outputArr);
   var outputStr = '';
-  outputStr += "uint8_t row0[640] = {\r\n";
+  outputStr += "const uint8_t row0[640] PROGMEM = {\r\n";
+  var count = 0;
+  var rollBack = false;
   for (var k = 0; k < Object.keys(outputArrSorted).length; k++) {
-    if (k % 640 == 0 && k != 0) {
-      outputStr += "\r\n};\nuint8_t row" + (k / 640) + "[640] = {\r\n";
+    if (k % 640 === 0 && k !== 0) {
+      outputStr += "\r\n};\r\nconst uint8_t row" + (k / 640) + "[640] PROGMEM = {\r\n";
+      rollBack = true;
+    } else if(rollBack) {
+      k = k-1;
+      rollBack = false;
+      outputStr += dhex(outputArrSorted[k]) + ", ";
     } else {
       outputStr += dhex(outputArrSorted[k]) + ", ";
     }
+    count++;
   }
-  fs.writeFile("./hex/image.txt", outputStr, function (err) {
+  outputStr += "\r\n};\r\n";
+  fs.writeFile("./output/hex/image.txt", outputStr, function (err) {
     if (err) {
       return console.log(err);
     }
@@ -86,11 +95,14 @@ function dechex(number) {
   if (number < 0) {
     number = 0xFFFFFFFF + number + 1;
   }
+  if (isNaN(parseInt(number, 10))){
+    console.log('NaN '+ number)
+  }
   return parseInt(number, 10).toString(16);
 };
 
 function dhex(val) {
-		var s = dechex(String(val).toUpperCase());
+		var s = dechex(intval(val));
 		if (s.length == 1) return "0x0" + s;
 		else return "0x" + s;
 }

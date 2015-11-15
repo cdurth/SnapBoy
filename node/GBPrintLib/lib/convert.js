@@ -6,7 +6,6 @@
 var fs = require('fs');
 var mime = require('mime');
 var PNG = require('node-png').PNG;
-var binToHex = require('./bin2hex');
 var datToHex = require('./dat2hex');
 var assign = require('object-assign');
 
@@ -215,7 +214,6 @@ module.exports = function (config, callback) {
   function run() {
     log('starting conversion of', argv.input);
 
-    validateOutputName(argv.output);
     validateFile(argv.input);
   };
   
@@ -251,34 +249,6 @@ module.exports = function (config, callback) {
         throw 'Input value is not a file';
       }
     });
-  };
-  
-  /**
-   * @sync
-   * 
-   * Determine whether a filename is an acceptable output filename.
-   * Remove file extension from the name, if necessary.
-   * 
-   * Necessary:
-   * - output file has to be a valid C variable type
-   * 
-   * @param {String} name tested filename
-   */
-  function validateOutputName(name) {
-    var includesExtension;
-    var cStyleName;
-
-    log('validating output variable name');
-
-    includesExtension = (name.match(/\..*/gm) || []).length > 0;
-    if (includesExtension) {
-      argv.output = name = name.replace(/\..*/gm, '');
-    }
-
-    cStyleName = (name.match(/^[A-Za-z_][A-Za-z_0-9]*$/gm) || []).length === 1;
-    if (!cStyleName) {
-      throw 'Invalid output name. Output must be a valid C-style variable name.';
-    }
   };
   
   /**
@@ -357,11 +327,6 @@ module.exports = function (config, callback) {
     var h;
 
     var pixel;
-    var r;
-    var g;
-    var b;
-    var c = 0;
-
     for (x = 0, w = imageData.width; x < w; x++) {
       for (y = 0, h = imageData.height; y < h; y++) {
         pixel = (w * y + x) << 2;
@@ -386,6 +351,7 @@ module.exports = function (config, callback) {
 
     return imageData;
   };
+  
   
   /**
    * @async
@@ -416,112 +382,51 @@ module.exports = function (config, callback) {
    * @see README.md
    */
   function convertFile(image) {
-    var output = [];
-    var batches = [];
-    var batchSize = {
-      w: argv.batchWidth,
-      h: argv.batchHeight
-    };
-
-    var col;
-    var fragment;
     var pixel;
 
     var x;
-    var w;
     var y;
-    var h;
 
-    var i;
-    var j;
     if (!argv.skipBinary) {
       log('converting data into binary batches');
       var outputStr = '';
       var row = '';
-      console.log(image.height,image.width);
+      console.log(image.height, image.width);
       for (y = 0; y < image.height; y++) {
         row = '';
         for (x = 0; x < image.width; x++) {
 
-              pixel = image.data[(image.width * y + x << 2)];
-              
-              if (pixel === 255) {
-                row += '3';
-              } else if (pixel === 170) {
-                row += '2';
-              } else if (pixel === 85) {
-                row += '1';
-              } else if (pixel === 0) {
-                row += '0';
-              } else {
-                 row += '?';
+          pixel = image.data[(image.width * y + x << 2)];
 
-                if (validateImageSize(image) === true) {
-                  throw 'Invalid image format or color palette.';
-                } else {
-                  throw 'Invalid image size.';
-                }
-              }
+          if (pixel === 255) {
+            row += '0';
+          } else if (pixel === 170) {
+            row += '1';
+          } else if (pixel === 85) {
+            row += '2';
+          } else if (pixel === 0) {
+            row += '3';
+          } else {
+            row += '?';
+
+            if (validateImageSize(image) === true) {
+              throw 'Invalid image format or color palette.';
+            } else {
+              throw 'Invalid image size.';
+            }
+          }
         }
         row += '\r\n';
         outputStr += row;
       }
-      
-      fs.writeFile("./dat/output.dat", outputStr, function(err) {
-          if(err) {
-              return console.log(err);
-          }
-          datToHex("./dat/output.dat");
-          console.log("The file was saved!");
-      });
-      
 
-          
-      /**
-       * @sync
-       * Shortcut minification function. 
-       * Returns value only if configuration `minify` is disabled.
-       * Otherwise returns empty string.
-       * 
-       * @param   {Object}        val value
-       * @returns {Object|String} @see description for more
-       */
-      function _min(val) {
-        return argv.minify === true ? '' : val;
-      };
-
-      output = [
-        'static const unsigned int ',
-        argv.output,
-        '_width = ',
-        image.width / batchSize.w,
-        ';\r\n',
-        'static const unsigned int ',
-        argv.output,
-        '_height = ',
-        image.height / batchSize.h,
-        ';\r\n',
-        'static const byte ',
-        argv.output,
-        '[][',
-        batchSize.w,
-        '] = {',
-        _min('\r\n')
-      ];
-
-      for (i = 0; i < batches.length; i++) {
-        output.push(_min('  '), '{');
-        for (j = 0; j < batchSize.w; j++) {
-          if (j > 0) {
-            output.push(',', _min(' '));
-          }
-          output.push(batches[i][j]);
+      fs.writeFile("./output/dat/output.dat", outputStr, function (err) {
+        if (err) {
+          return console.log(err);
         }
-        output.push('}', i < batches.length - 1 ? ',' : '', _min('\r\n'));
-      }
-      output.push('};');
-
-      saveFile(output.join(''));
+        datToHex("./output/dat/output.dat");
+        console.log("The file was saved!");
+      });
     }
 
     if (argv.preview) {

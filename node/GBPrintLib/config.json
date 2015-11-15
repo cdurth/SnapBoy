@@ -1,11 +1,11 @@
 {
-  "input": "./images/image2.png",
+  "input": "./output/images/image2.png",
   "output": "image",
-  "outputDir": "./output",
+  "outputDir": "./output/output",
   "skipBinary": false,
 
   "minify": false,
 
   "preview": true,
-  "previewDir": "./preview"
+  "previewDir": "./output/preview"
 }

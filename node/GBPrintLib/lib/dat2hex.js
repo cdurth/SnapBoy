@@ -8,6 +8,7 @@
 
 var fs = require('fs');
 var readFile = require('./readFile');
+var Image = require('../../models/image');
 
 function datToHex(file, configObj) {
   //open the file
@@ -66,12 +67,20 @@ function datToHex(file, configObj) {
   }
   var outputArrSorted = ksort(outputArr);
   var outputStr = '';
-  outputStr += "const uint8_t row0[640] PROGMEM = {\r\n";
+  var linesArr = [];
+  //outputStr += "const uint8_t row0[640] PROGMEM = {\r\n";
+  outputStr += "data:"
   var count = 0;
   var rollBack = false;
   for (var k = 0; k < Object.keys(outputArrSorted).length; k++) {
     if (k % 640 === 0 && k !== 0) {
-      outputStr += "\r\n};\r\nconst uint8_t row" + (k / 640) + "[640] PROGMEM = {\r\n";
+     var tmpOutputStr = outputStr;
+      var tmpLine = {
+        line: tmpOutputStr
+      }
+      linesArr.push(JSON.stringify(tmpLine));
+      outputStr = "data: ";
+      //outputStr += "\r\n};\r\nconst uint8_t row" + (k / 640) + "[640] PROGMEM = {\r\n";
       rollBack = true;
     } else if(rollBack) {
       k = k-1;
@@ -82,7 +91,15 @@ function datToHex(file, configObj) {
     }
     count++;
   }
-  outputStr += "\r\n};\r\n";
+  //outputStr += "\r\n};\r\n";
+  
+  Image.findById(configObj.id, function (err, doc){
+    console.log(doc.id);
+    doc.lines = linesArr;
+    doc.totalLines = linesArr.length;
+    doc.save();
+  });
+
   fs.writeFile("./GBPrintLib/output/hex/"+ configObj.id +".txt", outputStr, function (err) {
     if (err) {
       return console.log(err);

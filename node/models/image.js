@@ -7,5 +7,5 @@ module.exports = mongoose.model('image', new Schema({
 	pathToFile: String,
 	totalLines: String,
 	lines: [String],
-	printed: Boolean
+	printed: { type: Boolean, default: false }
 }));

@@ -31,7 +31,7 @@ module.exports = function (config, callback) {
    * Default configuration.
    */
   var defaults = {
-    input: './GBPrintLib/output/images/'+ config.id +'.png',
+    input: './GBPrintLib/output/images/' + config.id + '.png',
     output: config.id,
     outputDir: '../output/output',
     outputExt: 'txt',
@@ -43,7 +43,8 @@ module.exports = function (config, callback) {
     preview: true,
     previewDir: './GBPrintLib/output/preview',
     previewExt: 'png',
-    skipBinary: true
+    skipBinary: true,
+    enableDither: false
   };
   
   /*
@@ -79,6 +80,7 @@ module.exports = function (config, callback) {
     previewDir: argVal('-pdir') || defaults.previewDir,
     previewExt: argVal('-pext') || defaults.previewExt,
     skipBinary: argVal('-skipBinary') || defaults.skipBinary,
+    enableDither: argVal('-enableDither') || defaults.enableDither
   };
   
   /**
@@ -323,77 +325,110 @@ module.exports = function (config, callback) {
    * @returns {Object} B&W image data
    */
   function desaturateImage(imageData) {
-    var x;
-    var w;
-    var y;
-    var h;
+    if (argv.enableDither) {
+      var x;
+      var w;
+      var y;
+      var h;
 
-    var pixel, pixel2, pixel3, pixel4, pixel5;
-    var r;
-    var g;
-    var b;
-    var c = 0;
-    var colorErr;
+      var pixel, pixel2, pixel3, pixel4, pixel5;
+      var r;
+      var g;
+      var b;
+      var c = 0;
+      var colorErr;
 
-    for (x = 0, w = imageData.width; x < w; x++) {
-      for (y = 0, h = imageData.height; y < h; y++) {
-        pixel = (w * y + x) << 2;
-        pixel2 = (w * y + x + 1) << 2;
-        pixel3 = (w * (y + 1) + x - 1) << 2;
-        pixel4 = (w * (y + 1) + x) << 2;
-        pixel5 = (w * (y + 1) + x + 1) << 2;
+      for (x = 0, w = imageData.width; x < w; x++) {
+        for (y = 0, h = imageData.height; y < h; y++) {
+          pixel = (w * y + x) << 2;
+          pixel2 = (w * y + x + 1) << 2;
+          pixel3 = (w * (y + 1) + x - 1) << 2;
+          pixel4 = (w * (y + 1) + x) << 2;
+          pixel5 = (w * (y + 1) + x + 1) << 2;
 
 
-        var average = (imageData.data[pixel] + imageData.data[(pixel + 1)] + imageData.data[(pixel + 2)]) / 3;
-        var average2 = (imageData.data[pixel2] + imageData.data[(pixel2 + 1)] + imageData.data[(pixel2 + 2)]) / 3;
-        var average3 = (imageData.data[pixel3] + imageData.data[(pixel3 + 1)] + imageData.data[(pixel3 + 2)]) / 3;
-        var average4 = (imageData.data[pixel4] + imageData.data[(pixel4 + 1)] + imageData.data[(pixel4 + 2)]) / 3;
-        var average5 = (imageData.data[pixel5] + imageData.data[(pixel5 + 1)] + imageData.data[(pixel5 + 2)]) / 3;
+          var average = (imageData.data[pixel] + imageData.data[(pixel + 1)] + imageData.data[(pixel + 2)]) / 3;
+          var average2 = (imageData.data[pixel2] + imageData.data[(pixel2 + 1)] + imageData.data[(pixel2 + 2)]) / 3;
+          var average3 = (imageData.data[pixel3] + imageData.data[(pixel3 + 1)] + imageData.data[(pixel3 + 2)]) / 3;
+          var average4 = (imageData.data[pixel4] + imageData.data[(pixel4 + 1)] + imageData.data[(pixel4 + 2)]) / 3;
+          var average5 = (imageData.data[pixel5] + imageData.data[(pixel5 + 1)] + imageData.data[(pixel5 + 2)]) / 3;
         
-        //console.log("first average", average);
-        //console.log("second average", average2);
-        //console.log("third average", average3);
-        //console.log("fourth average", average4);
-        //console.log("fifth average", average5);
+          //console.log("first average", average);
+          //console.log("second average", average2);
+          //console.log("third average", average3);
+          //console.log("fourth average", average4);
+          //console.log("fifth average", average5);
 
-        if (average < 63) {
-          //black
-          imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 0;
-          colorErr = average;
-        } else if (average < 126 && average >= 63) {
-          //dark grey
-          imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 85;
-          colorErr = average - 85;
-        } else if (average < 189 && average >= 126) {
-          //light grey
-          imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 170;
-          colorErr = average - 170;
-        } else {
-          //white
-          imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 255;
-          colorErr = average - 255;
-        }
+          if (average < 63) {
+            //black
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 0;
+            colorErr = average;
+          } else if (average < 126 && average >= 63) {
+            //dark grey
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 85;
+            colorErr = average - 85;
+          } else if (average < 189 && average >= 126) {
+            //light grey
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 170;
+            colorErr = average - 170;
+          } else {
+            //white
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 255;
+            colorErr = average - 255;
+          }
 
-        if (x < w - 1 && y < h - 1) {
-          //console.log("Color Error", colorErr);
-          //console.log("initial average", average2);
-          imageData.data[pixel2] = imageData.data[pixel2 + 1] = imageData.data[pixel2 + 2] = average2 + (7 / 16) * colorErr;
-          //imageData.data[pixel3] = imageData.data[pixel3 + 1] = imageData.data[pixel3 + 2] = average3 + (3/16)*colorErr;
-          imageData.data[pixel4] = imageData.data[pixel4 + 1] = imageData.data[pixel4 + 2] = average4 + (5 / 16) * colorErr;
-          imageData.data[pixel5] = imageData.data[pixel5 + 1] = imageData.data[pixel5 + 2] = average5 + (1 / 16) * colorErr;
-          //average2 = (imageData.data[pixel2] + imageData.data[(pixel2 + 1)] + imageData.data[(pixel2 + 2)]) / 3;
+          if (x < w - 1 && y < h - 1) {
+            //console.log("Color Error", colorErr);
+            //console.log("initial average", average2);
+            imageData.data[pixel2] = imageData.data[pixel2 + 1] = imageData.data[pixel2 + 2] = average2 + (7 / 16) * colorErr;
+            //imageData.data[pixel3] = imageData.data[pixel3 + 1] = imageData.data[pixel3 + 2] = average3 + (3/16)*colorErr;
+            imageData.data[pixel4] = imageData.data[pixel4 + 1] = imageData.data[pixel4 + 2] = average4 + (5 / 16) * colorErr;
+            imageData.data[pixel5] = imageData.data[pixel5 + 1] = imageData.data[pixel5 + 2] = average5 + (1 / 16) * colorErr;
+            //average2 = (imageData.data[pixel2] + imageData.data[(pixel2 + 1)] + imageData.data[(pixel2 + 2)]) / 3;
         
-          //console.log("modified average", average2);
-        }
-        if (x % 40 == 0) {
-          //console.log(pixel, pixel2);
-        }
+            //console.log("modified average", average2);
+          }
+          if (x % 40 == 0) {
+            //console.log(pixel, pixel2);
+          }
 
 
+        }
       }
+
+      return imageData;
+    } else {
+      var x;
+      var w;
+      var y;
+      var h;
+
+      var pixel;
+      for (x = 0, w = imageData.width; x < w; x++) {
+        for (y = 0, h = imageData.height; y < h; y++) {
+          pixel = (w * y + x) << 2;
+
+          var average = (imageData.data[pixel] + imageData.data[(pixel + 1)] + imageData.data[(pixel + 2)]) / 3;
+
+          if (average < 63) {
+            //black
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 0;
+          } else if (average < 126 && average >= 63) {
+            //dark grey
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 85;
+          } else if (average < 189 && average >= 126) {
+            //light grey
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 170;
+          } else {
+            //white
+            imageData.data[pixel] = imageData.data[pixel + 1] = imageData.data[pixel + 2] = 255;
+          }
+        }
+      }
+
+      return imageData;
     }
 
-    return imageData;
   };
   
   
@@ -464,11 +499,11 @@ module.exports = function (config, callback) {
         outputStr += row;
       }
 
-      fs.writeFile("./GBPrintLib/output/dat/"+ config.id +".dat", outputStr, function (err) {
+      fs.writeFile("./GBPrintLib/output/dat/" + config.id + ".dat", outputStr, function (err) {
         if (err) {
           return console.log(err);
         }
-        datToHex("./GBPrintLib/output/dat/"+ config.id +".dat", config);
+        datToHex("./GBPrintLib/output/dat/" + config.id + ".dat", config);
         console.log("The file was saved!");
       });
     }

@@ -51,13 +51,12 @@ function processCfg(id) {
 		"input": "./GBPrintLib/output/images/"+ id +".png",
 		"output": id,
 		"skipBinary": false,
-
+		"enableDither": true,
 		"minify": false,
 
 		"preview": true,
 		"previewDir": "./GBPrintLib/output/preview"
 	};
-	
 	return cfg;
 }
 

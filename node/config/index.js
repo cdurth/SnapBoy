@@ -9,8 +9,8 @@ var config = {
       name: 'jobservice'
     },
     port: 3000,
-    database: "mongodb://admin:baseball9@apollo.modulusmongo.net:27017/Se2wojuv"
-    
+    //database: "mongodb://admin:baseball9@apollo.modulusmongo.net:27017/Se2wojuv"
+    database: "mongodb://admin:baseball9@localhost:27017/images"
   },
 
   test: {

@@ -4,26 +4,65 @@ var request = require('request');
 var _ = require('lodash');
 var util = require('../../util');
 
+var Image = require('../../models/image');
+
+var imageID;
+
 exports.queue = function (req, res) {
-	res.send("img01");
+	Image.findOne({ 'printed': 'false' }, function (err, doc) {
+		if (!_.isEmpty(doc)) {
+			imageID= doc.id;
+			res.send('id: '+ doc.id);
+		} else {
+			res.send('0');
+		}
+	});
+
 };
 
 exports.printImgId = function (req, res) {
 	var image = req.params.imgId;
-	res.send(tmpObj.totalLines.toString());
+
+	Image.findById(image, function (err, doc) {
+		if(!err){
+			res.send('lines: '+ doc.totalLines);
+		} else {
+			res.send('0');
+		}
+	});
 };
 
 exports.pringImgIdLine = function (req, res) {
-	var image = req.params.imgId;
-	var line = req.params.imgLine;
-	console.log(line);
-	res.send(tmpObj.imgLines[line].line);
-	//res.end(new Buffer("data:"+ util.toBinary(tmpObj.imgLines[line].line,0), 'binary'));
+	console.log(imageID);
+	//var image = req.params.imgId;
+	var image = imageID;
+	var tmpLine = req.params.imgLine;
+		Image.findById(image, function (err, doc) {
+		if (typeof image !== "undefined" && image !== 0  && image !== null) {
+			console.log(image);
+			var row = JSON.parse(doc.lines[tmpLine]);
+			res.send(row.line);
+		} else {
+			res.send('0');
+		}
+	});
+
 
 };
 
 exports.imageProcessed = function (req, res) {
-	res.send('esp imageProcessed POST id:' + req.params.imageid);
+	//var image = req.params.imgId;
+	var image = imageID;
+	Image.findById(image, function (err, doc) {
+		if (!_.isEmpty(doc)) {
+			imageID = 0;
+			doc.printed = true;
+			doc.save();
+			res.send('1');
+		} else {
+			res.send('0');
+		}
+	});
 };
 
 exports.test = function(req,res) {
